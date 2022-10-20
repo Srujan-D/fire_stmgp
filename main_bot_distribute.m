@@ -7,7 +7,7 @@
 
 % with distributed coverage control and consensus density function learning
 
-function [rms_stack, var_stack, cf, max_mis, model, pred_h, pred_Var] = main_bot_distribute(varargin)
+function [rms_stack, var_stack, cf, max_mis, model, pred_h, pred_Var] = main_bot_distribute(Fss_input, varargin)
 global num_gau num_bot Xss Fss eta
 
 load('sample_data_stalk_count.mat'); % use stalk count data

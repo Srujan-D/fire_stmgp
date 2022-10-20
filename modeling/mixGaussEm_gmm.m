@@ -13,7 +13,7 @@ function [label, model, llh, R, break_flag] = mixGaussEm_gmm(X, init)
 % note that only the output 'model', 'label', 'R' is sorted and can be used for
 % distributed consensus learning.
 %% init
-fprintf('EM for Gaussian mixture: running ... \n');
+%fprintf('EM for Gaussian mixture: running ... \n');
 break_flag = false;
 tol = 1e-6;
 maxiter = 500;
