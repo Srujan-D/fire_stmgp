@@ -10,8 +10,8 @@
 function [indices] = main_bot_distribute_window(Fss_input, seq_length, varargin)
 %old return vars: rms_stack, var_stack, cf, max_mis, model, pred_h, pred_Var
 % Get path to simulator
-% display('Initializing MATLAB simulator');
-% display(size(Fss_input))
+display('Initializing MATLAB simulator');
+display(size(Fss_input))
 
 paths = {'modeling','utilities'}; 
 
@@ -32,9 +32,20 @@ if(warned == 0)
 end
 %RAN INIT HERE TO BE COMPATIBLE WITH PYTHON
 global num_gau num_bot Xss Fss eta
+display('Initializing MATLAB simulator');
+display('Xss is: ')
+display(size(Xss))
+display('Fss is: ')
+display(size(Fss))
 
 load('sample_data_stalk_count.mat'); % use stalk count data
+display('Xss is: ')
+display(size(Xss))
+display('Fss is: ')
+display(size(Fss))
 
+% display('stalk_data is: ')
+% display(stalk_data)
 % lat = ncread("air.sig995.mon.mean.nc", "lat");
 % lat_y = lat(1:45);
 % lon = ncread("air.sig995.mon.mean.nc", "lon");
@@ -62,6 +73,8 @@ for times = 1:seq_length
     Xss_temp = [Xss ones(size(Xss, 1), 1)*times];
     Xss_big = [Xss_big; Xss_temp];
 end
+display('Xss_big is: ')
+display(size(Xss_big))
 Xss = Xss_big;
 Fss_big = Fss;
 % air_x_y_1 = air(1:21, 1:45, 1);
@@ -115,6 +128,7 @@ while true
 map_x = 30;
 map_y = 30;
 idx_var = map_y*map_x;
+% idx_var=945;
 
 
 %%%air data vars, uncomment next 3 lines
@@ -309,9 +323,14 @@ for it = 1 : it_num
             end
         end
     end
+    % display('Before Fss temp')
+    % display(size(Fss))
     Fss = temp_Fss;
+    % display('After fss temp')
+    % display(size(Fss))
     Xss = temp_Xss;
-
+    display('Xss_base')
+    display(size(Xss_base))
     for temp_it = it-0:it+0
         if temp_it > 0
             t = ones(size(Xss_base, 1), 1)*temp_it;
@@ -319,6 +338,7 @@ for it = 1 : it_num
             Xss = [temp_Xss; Xss_t];
             display('Before')
             display(size(Fss))
+            display(size(Fss_big(idx_var*(it-1)+1:idx_var*it)))
             Fss = [temp_Fss; Fss_big(idx_var*(it-1)+1:idx_var*it)];
             display('After')
             display(size(Fss))
