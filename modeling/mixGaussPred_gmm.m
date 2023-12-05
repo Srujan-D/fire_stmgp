@@ -15,8 +15,14 @@ n = size(X,2);
 k = size(mu,2);
 logRho = zeros(n,k);
 
+% display('Predicting...');
+
 for i = 1:k
     logRho(:,i) = loggausspdf(X,mu(:,i),Sigma(:,:,i));
+    % display('Sigma');
+    % display(Sigma(:,:,i));
+    % display('mu');
+    % display(mu(:,i));
 end
 logRho = bsxfun(@plus,logRho,log(w));
 T = logsumexp(logRho,2);
@@ -29,6 +35,7 @@ d = size(X,1);
 X = bsxfun(@minus,X,mu);
 [U,p]= chol(Sigma);
 if p ~= 0
+    display(Sigma);
     error('ERROR: Sigma is not PD.');
 end
 Q = U'\X;

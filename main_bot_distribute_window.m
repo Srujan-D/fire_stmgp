@@ -7,10 +7,11 @@
 
 % with distributed coverage control and consensus density function learning
 
-function [indices] = main_bot_distribute(Fss_input, seq_length, varargin)
+function [indices] = main_bot_distribute_window(Fss_input, seq_length, varargin)
 %old return vars: rms_stack, var_stack, cf, max_mis, model, pred_h, pred_Var
 % Get path to simulator
-%display('Initializing MATLAB simulator');
+% display('Initializing MATLAB simulator');
+% display(size(Fss_input))
 
 paths = {'modeling','utilities'}; 
 
@@ -45,9 +46,10 @@ Fss_base = Fss;
 Fss = [];
 Xss_big = [];
 Fss = reshape(Fss_input, [], 1);
-min_air = min(Fss,[],"all");
-max_air = max(Fss,[],"all") + 40;
-Fss = Fss - min_air;
+% #TODO: uncomment the next 3 lines to use air data
+% min_air = min(Fss,[],"all");
+% max_air = max(Fss,[],"all") + 40;
+% Fss = Fss - min_air;
 for times = 1:seq_length
     %air_x_y_1 = air(1:21, 1:45, times);
     %min_air = min(air_x_y_1,[],"all");
@@ -108,9 +110,18 @@ kappa = parser.Results.kappa;
 
 %%%%%%%%%%%%%%%%%%% dataset dependent variables
 while true
-map_x = 20;
-map_y = 44;
-map_z = [min_air - min_air,max_air - min_air];
+
+%%%fire data vars
+map_x = 30;
+map_y = 30;
+idx_var = map_y*map_x;
+
+
+%%%air data vars, uncomment next 3 lines
+% map_x = 20;
+% map_y = 44;
+% map_z = [min_air - min_air,max_air - min_air];
+
 % beta = 1; % beta for GP-UCB:   mu + beta*s2
 % num_gau = 3;
 % unit_sam = 3; % draw some samples from each distribution
@@ -164,6 +175,9 @@ end
 if isempty(bots)  %nargin < 1
 
     init_abg = zeros(1,num_gau);
+    % init_abg = ones(1,num_gau)/num_gau;
+    % initialize as random numbers between 0, 1
+    % init_abg = rand(1,num_gau);
     tmp_init = cell(1,num_bot);
     [tmp_init{:}] = deal(init_abg);
     bots = struct('alpha_K',tmp_init,'belta_K',...
@@ -303,7 +317,11 @@ for it = 1 : it_num
             t = ones(size(Xss_base, 1), 1)*temp_it;
             Xss_t = [Xss_base t];
             Xss = [temp_Xss; Xss_t];
-            Fss = [temp_Fss; Fss_big(945*(it-1)+1:945*it)];
+            display('Before')
+            display(size(Fss))
+            Fss = [temp_Fss; Fss_big(idx_var*(it-1)+1:idx_var*it)];
+            display('After')
+            display(size(Fss))
         end
     end
 
@@ -368,6 +386,14 @@ for it = 1 : it_num
     for iij = 1:num_bot
         %         idx_tmp = find(k==iij); % get corresponding index of the monitored points by bot iij
         %         bots(iij).Nm_ind = bots(iij).Nm_ind(:)';
+        % display('k')
+        % display(size(k))
+        % display('iij')
+        % display(iij)
+        display('Xss size')
+        display(size(Xss))
+        display('Fss size')
+        display(size(Fss))
         [pred_h(k==iij), pred_Var(k==iij), ~] = gmm_pred_wafr(Xss(k==iij,:), Fss(k==iij), bots(iij), 'hyp2_new', hyp2_new);
     end
     %     [pred_h, pred_Var, pred_rms, llh] = map_pred(Xss, Fss, model);
@@ -578,14 +604,14 @@ for it = 1 : it_num
         idxs = find(ismember(Xss_big, vals, 'rows'));
     else
         disp('for loop method');
-        idxs = randperm(21*45, 100)';
+        idxs = randperm(idx_var, 100)';
         for i_it = 1:100
             curr_idx = find(ismember(Xss_big, vals(i_it, :), 'rows'));
             idxs(i_it) = curr_idx;
         end
     end
-    idxs = mod(idxs, 21*45);
-    idxs(idxs == 0) = 21*45;
+    idxs = mod(idxs, idx_var);
+    idxs(idxs == 0) = idx_var;
     idxs = idxs - 1;
     indices = [indices idxs];
 end
@@ -734,6 +760,7 @@ kss = zeros(1,1,num_gau);
 for ijj = 1:num_gau
     
     if bots(n).Sigma_K(ijj)<10^-5
+        display(Sigma_K(ijj))
         disp('Sigma too low')
         %pause;
     end
