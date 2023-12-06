@@ -10,8 +10,6 @@
 function [indices] = main_bot_distribute_window(Fss_input, seq_length, varargin)
 %old return vars: rms_stack, var_stack, cf, max_mis, model, pred_h, pred_Var
 % Get path to simulator
-display('Initializing MATLAB simulator');
-display(size(Fss_input))
 
 paths = {'modeling','utilities'}; 
 
@@ -19,33 +17,41 @@ path_local_sim_init = pwd;
 warned = 0;
 
 for i = 1:length(paths) 
-   addpath(genpath(strcat(path_local_sim_init, '/', paths{i}))); 
-   if(exist(paths{i}) ~= 7) 
-      warning('The path %s was not correctly added.  Make sure that you are in the directory of the simulator!', paths{i}); 
-      warned = 1;
-   end
+    addpath(genpath(strcat(path_local_sim_init, '/', paths{i}))); 
+    if(exist(paths{i}) ~= 7) 
+        warning('The path %s was not correctly added.  Make sure that you are in the directory of the simulator!', paths{i}); 
+        warned = 1;
+    end
 end
 
 if(warned == 0) 
-   addpath(pwd);
-   %display('MATLAB simulator initialized successfully!');
+    addpath(pwd);
+    %display('MATLAB simulator initialized successfully!');
 end
 %RAN INIT HERE TO BE COMPATIBLE WITH PYTHON
 global num_gau num_bot Xss Fss eta
-display('Initializing MATLAB simulator');
-display('Xss is: ')
-display(size(Xss))
-display('Fss is: ')
-display(size(Fss))
 
 load('sample_data_stalk_count.mat'); % use stalk count data
-display('Xss is: ')
-display(size(Xss))
-display('Fss is: ')
-display(size(Fss))
 
-% display('stalk_data is: ')
-% display(stalk_data)
+%%% uncomment for Fire data
+%%%fire data vars
+% map_x = 30;
+% map_y = 30;
+% idx_var = map_y*map_x;
+%%% uncomment for Air data
+map_x=21;
+map_y=45;
+idx_var=945;
+% Xss = zeros(idx_var, 2);
+%%%% first col is lat 0:29, second col is lon 0:29
+% for i = 1:map_x
+%     for j = 1:map_y
+%         Xss((i-1)*map_x+j, 1) = i-1;
+%         Xss((i-1)*map_y+j, 2) = j-1;
+%     end
+% end
+
+
 % lat = ncread("air.sig995.mon.mean.nc", "lat");
 % lat_y = lat(1:45);
 % lon = ncread("air.sig995.mon.mean.nc", "lon");
@@ -73,8 +79,6 @@ for times = 1:seq_length
     Xss_temp = [Xss ones(size(Xss, 1), 1)*times];
     Xss_big = [Xss_big; Xss_temp];
 end
-display('Xss_big is: ')
-display(size(Xss_big))
 Xss = Xss_big;
 Fss_big = Fss;
 % air_x_y_1 = air(1:21, 1:45, 1);
@@ -124,11 +128,7 @@ kappa = parser.Results.kappa;
 %%%%%%%%%%%%%%%%%%% dataset dependent variables
 while true
 
-%%%fire data vars
-map_x = 30;
-map_y = 30;
-idx_var = map_y*map_x;
-% idx_var=945;
+
 
 
 %%%air data vars, uncomment next 3 lines
@@ -329,19 +329,21 @@ for it = 1 : it_num
     % display('After fss temp')
     % display(size(Fss))
     Xss = temp_Xss;
-    display('Xss_base')
-    display(size(Xss_base))
+    % display('temp Xss')
+    % display(Xss)
+    % display('Xss_base')
+    % display(size(Xss_base))
     for temp_it = it-0:it+0
         if temp_it > 0
             t = ones(size(Xss_base, 1), 1)*temp_it;
             Xss_t = [Xss_base t];
             Xss = [temp_Xss; Xss_t];
-            display('Before')
-            display(size(Fss))
-            display(size(Fss_big(idx_var*(it-1)+1:idx_var*it)))
+            % display('Before')
+            % display(size(Fss))
+            % display(size(Fss_big(idx_var*(it-1)+1:idx_var*it)))
             Fss = [temp_Fss; Fss_big(idx_var*(it-1)+1:idx_var*it)];
-            display('After')
-            display(size(Fss))
+            % display('After')
+            % display(size(Fss))
         end
     end
 
@@ -410,10 +412,10 @@ for it = 1 : it_num
         % display(size(k))
         % display('iij')
         % display(iij)
-        display('Xss size')
-        display(size(Xss))
-        display('Fss size')
-        display(size(Fss))
+        % display('Xss size')
+        % display(size(Xss))
+        % display('Fss size')
+        % display(size(Fss))
         [pred_h(k==iij), pred_Var(k==iij), ~] = gmm_pred_wafr(Xss(k==iij,:), Fss(k==iij), bots(iij), 'hyp2_new', hyp2_new);
     end
     %     [pred_h, pred_Var, pred_rms, llh] = map_pred(Xss, Fss, model);
@@ -618,7 +620,7 @@ for it = 1 : it_num
     end
     
     %end %ten_samps loop
-    [M_it, I_it] = maxk(est_s2(Xss(:,3) == it), 100);
+    [M_it, I_it] = maxk(est_s2(Xss(:,3) == it), 20);
     vals = Xss(I_it, :);
     if size(unique(vals, 'rows'), 1) == 100
         idxs = find(ismember(Xss_big, vals, 'rows'));
